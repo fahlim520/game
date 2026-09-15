@@ -5,15 +5,17 @@ import threading
 import urllib.request
 from pathlib import Path
 
-from ai_matcher import EnemyDecision, MatchResult, ReportResult
+from ai_matcher import EnemyDecision, MatchResult, PreparedMatchMatrix, ReportResult
 from web_server import KnowledgeDefenderWebServer
 
 
 class FakeAIClient:
     configured = True
     model = "fake-qwen"
+    last_decide_payload = None
 
     def decide_enemy(self, payload):
+        FakeAIClient.last_decide_payload = payload
         return EnemyDecision(
             level=1,
             formula_count=1,
@@ -40,6 +42,13 @@ class FakeAIClient:
             weaknesses=["样本不足"],
             review_chapters=["大物第1章 质点运动"],
             next_steps=["复练习受力分析"],
+        )
+
+    def prepare_match_matrix(self, payload):
+        result = self.match_answer(payload)
+        return PreparedMatchMatrix(
+            results={"newton_second_law": result},
+            best_concept_id="newton_second_law",
         )
 
 
@@ -89,6 +98,14 @@ def test_web_session_and_match_flow() -> None:
         assert match["match"]["accepted"] is True
         assert match["resolved"]["monsterDefeated"] is True
         assert match["state"]["enemiesDefeated"] == 1
+
+        second_session = post_json(base_url, "/api/session", {})
+        post_json(
+            base_url,
+            "/api/decide",
+            {"sessionId": second_session["sessionId"]},
+        )
+        assert "physics_newton_second" in FakeAIClient.last_decide_payload["avoid_formula_ids"]
     finally:
         server.shutdown()
         server.server_close()

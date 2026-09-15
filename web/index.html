@@ -57,15 +57,14 @@
             <strong id="enemyName">等待 AI 生成</strong>
           </div>
           <div id="monsterCreature" class="monster-creature">
-            <span class="eye left"></span>
-            <span class="eye right"></span>
-            <span class="mouth"></span>
+            <img id="monsterSprite" src="/assets/kenney/slime.png" alt="">
           </div>
           <div id="formulaPanel" class="formula-panel">
             <strong id="formulaText">AI 正在分析学情...</strong>
             <span id="formulaSkill">下一只怪物即将出现</span>
+            <div id="formulaSlots" class="formula-slots"></div>
           </div>
-          <div id="formulaSlots" class="formula-slots"></div>
+          <div class="player-line"><span>你的防线</span></div>
         </div>
 
         <div class="held-strip" id="heldStrip">
@@ -214,6 +213,17 @@
     </div>
   </div>
 
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]]
+      },
+      svg: { fontCache: "global" },
+      options: { enableMenu: false }
+    };
+  </script>
+  <script defer src="/vendor/mathjax/tex-svg.js"></script>
   <script type="module" src="/app.js"></script>
 </body>
 </html>

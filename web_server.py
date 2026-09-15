@@ -10,10 +10,12 @@ import argparse
 import json
 import mimetypes
 import os
+import random
 import secrets
 import threading
 import time
 import uuid
+from collections import deque
 from dataclasses import dataclass, field
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -23,7 +25,7 @@ from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 
-from ai_matcher import AIError, QwenAIClient
+from ai_matcher import AIError, MatchResult, QwenAIClient
 from ai_tracker import build_enemy_request, build_match_request
 from game_engine import SUBJECT_LABELS, SUBJECT_ORDER, ContentBank, GameEngine
 
@@ -41,6 +43,10 @@ class WebSession:
     created_at: float = field(default_factory=time.monotonic)
     last_seen_at: float = field(default_factory=time.monotonic)
     lock: threading.Lock = field(default_factory=threading.Lock)
+    cache_lock: threading.Lock = field(default_factory=threading.Lock)
+    prepared_matches: dict[tuple[str, str], MatchResult] = field(default_factory=dict)
+    preparing_formulas: set[str] = field(default_factory=set)
+    avoid_formula_ids: tuple[str, ...] = ()
 
     def touch(self) -> None:
         self.last_seen_at = time.monotonic()
@@ -51,6 +57,7 @@ class SessionStore:
         self.bank = bank
         self.target_enemies = target_enemies
         self._sessions: dict[str, WebSession] = {}
+        self._recent_formula_ids: deque[str] = deque(maxlen=8)
         self._lock = threading.Lock()
 
     def create(self) -> WebSession:
@@ -58,7 +65,13 @@ class SessionStore:
         session_id = uuid.uuid4().hex
         engine = GameEngine(self.bank, target_enemies=self.target_enemies)
         engine.start(time.monotonic())
-        session = WebSession(session_id=session_id, engine=engine)
+        with self._lock:
+            avoid_formula_ids = tuple(self._recent_formula_ids)
+        session = WebSession(
+            session_id=session_id,
+            engine=engine,
+            avoid_formula_ids=avoid_formula_ids,
+        )
         with self._lock:
             self._sessions[session_id] = session
         return session
@@ -80,6 +93,10 @@ class SessionStore:
             ]
             for session_id in expired:
                 self._sessions.pop(session_id, None)
+
+    def remember_formula_ids(self, formula_ids: list[str]) -> None:
+        with self._lock:
+            self._recent_formula_ids.extend(formula_ids)
 
 
 class RateLimiter:
@@ -188,8 +205,21 @@ class RequestHandler(BaseHTTPRequestHandler):
             if engine.monster is not None:
                 self._json_response(self._enemy_payload(session))
                 return
-            decision = self.server.ai_client.decide_enemy(build_enemy_request(engine))
+            request_payload = build_enemy_request(engine)
+            avoid = set(session.avoid_formula_ids)
+            if avoid:
+                filtered = [
+                    item for item in request_payload["available_formulas"]
+                    if item["id"] not in avoid
+                ]
+                if len(filtered) >= 4:
+                    request_payload["available_formulas"] = filtered
+            request_payload["avoid_formula_ids"] = list(session.avoid_formula_ids)
+            random.SystemRandom().shuffle(request_payload["available_formulas"])
+            decision = self.server.ai_client.decide_enemy(request_payload)
             engine.install_monster(decision, time.monotonic())
+            self.server.sessions.remember_formula_ids(decision.formula_ids)
+            self._start_match_precompute(session)
             self._json_response(self._enemy_payload(session))
 
     def _match_answer(self, payload: dict[str, Any]) -> None:
@@ -202,10 +232,15 @@ class RequestHandler(BaseHTTPRequestHandler):
                 raise ValueError("当前公式已经变化，请重新选择")
             if concept_id not in self.server.bank.knowledge:
                 raise ValueError("知识点 ID 不存在")
-            result = self.server.ai_client.match_answer(build_match_request(engine, formula_id, concept_id))
+            with session.cache_lock:
+                result = session.prepared_matches.get((formula_id, concept_id))
+            if result is None:
+                result = self.server.ai_client.match_answer(build_match_request(engine, formula_id, concept_id))
             resolved = engine.resolve_answer(concept_id, result, time.monotonic())
             if resolved["monster_defeated"] and not engine.game_over:
                 engine.advance_enemy()
+            elif not resolved["monster_defeated"]:
+                self._start_match_precompute(session)
             self._json_response(
                 {
                     "match": {
@@ -223,6 +258,38 @@ class RequestHandler(BaseHTTPRequestHandler):
                     "state": self._state_payload(session),
                 }
             )
+
+    def _start_match_precompute(self, session: WebSession) -> None:
+        formula_id = session.engine.monster.current_formula_id if session.engine.monster else None
+        if not formula_id:
+            return
+        candidates = session.engine.candidate_concepts(formula_id)
+        with session.cache_lock:
+            if formula_id in session.preparing_formulas:
+                return
+            if all((formula_id, item["id"]) in session.prepared_matches for item in candidates):
+                return
+            session.preparing_formulas.add(formula_id)
+        formula_payload = self.server.bank.formula_public_payload(formula_id)
+
+        def prepare() -> None:
+            try:
+                prepared = self.server.ai_client.prepare_match_matrix(
+                    {
+                        "formula": formula_payload,
+                        "candidate_concepts": candidates,
+                    }
+                )
+                with session.cache_lock:
+                    for concept_id, result in prepared.results.items():
+                        session.prepared_matches[(formula_id, concept_id)] = result
+            except Exception as exc:
+                print(f"[precompute] {formula_id}: {type(exc).__name__}: {exc}")
+            finally:
+                with session.cache_lock:
+                    session.preparing_formulas.discard(formula_id)
+
+        threading.Thread(target=prepare, name=f"prepare-{formula_id}", daemon=True).start()
 
     def _generate_report(self, payload: dict[str, Any]) -> None:
         session = self._get_session(payload)

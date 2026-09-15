@@ -116,3 +116,20 @@ def test_match_payload_does_not_leak_accepted_solution() -> None:
     assert "accepted_concepts" not in payload
     assert "skill_label" not in payload
     assert "canonical_explanation" not in payload
+
+
+def test_content_bank_includes_advanced_mechanics_and_thermodynamics() -> None:
+    bank = ContentBank(Path(__file__).resolve().parents[1])
+    physics = [item for item in bank.formulas.values() if item.subject == "physics"]
+    labels = {item.skill_label for item in physics}
+
+    assert "拉格朗日方程" in labels
+    assert "纳维-斯托克斯方程" in labels
+    assert "热力学第一定律" in labels
+    assert "玻尔兹曼熵" in labels
+    assert "正则配分函数" in labels
+    engine = GameEngine(bank)
+    catalog = engine.formula_catalog_for_ai(engine.current_level)
+    assert engine.current_level == 2
+    assert catalog
+    assert all(item["difficulty"] == 2 for item in catalog)

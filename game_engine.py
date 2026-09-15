@@ -32,6 +32,7 @@ class Formula:
     skill_label: str
     canonical_explanation: str
     difficulty: int
+    latex: str = ""
 
 
 @dataclass(frozen=True)
@@ -56,6 +57,7 @@ class ContentBank:
                 skill_label=item["skill_label"],
                 canonical_explanation=item["canonical_explanation"],
                 difficulty=int(item["difficulty"]),
+                latex=item.get("latex", item["formula"]),
             )
             for item in formula_data
         }
@@ -113,6 +115,7 @@ class ContentBank:
             "formula": formula.formula,
             "skill_label": formula.skill_label,
             "difficulty": formula.difficulty,
+            "latex": formula.latex,
         }
 
     def formulas_for_level(self, level: int) -> list[Formula]:
@@ -227,7 +230,8 @@ class GameEngine:
         self.attempts: list[Attempt] = []
         self.enemies_defeated = 0
         self.lives = self.START_LIVES
-        self.current_level = 1
+        self.current_level = 2
+        self.used_formula_ids: set[str] = set()
         self.enemy_index = 1
         self.game_over = False
         self.won = False
@@ -242,6 +246,7 @@ class GameEngine:
     def install_monster(self, decision: EnemyDecision, now: float) -> None:
         self.bank.validate_all_formula_ids(decision.formula_ids)
         self.current_level = decision.level
+        self.used_formula_ids.update(decision.formula_ids)
         self.monster = Monster(decision=decision, formula_ids=list(decision.formula_ids))
         self.formula_started_at = now
 
@@ -308,7 +313,7 @@ class GameEngine:
         self.enemy_index += 1
         self.monster = None
 
-    def candidate_concepts(self, formula_id: str, limit: int = 14) -> list[dict[str, str]]:
+    def candidate_concepts(self, formula_id: str, limit: int = 10) -> list[dict[str, str]]:
         formula = self.bank.formulas[formula_id]
         accepted = set(formula.accepted_concepts)
         subject_items = self.bank.knowledge_for_subject(formula.subject)
@@ -366,15 +371,18 @@ class GameEngine:
 
     def formula_catalog_for_ai(self, level: int) -> list[dict[str, Any]]:
         formulas = self.bank.formulas_for_level(level)
-        # Keep prompts small while still exposing enough choices to the model.
-        formulas = formulas[:18]
+        preferred = [item for item in formulas if item.difficulty == level]
+        if len(preferred) >= 6:
+            formulas = preferred
+        unused = [item for item in formulas if item.id not in self.used_formula_ids]
+        if len(unused) >= 4:
+            formulas = unused
         return [
             {
                 "id": item.id,
                 "subject": item.subject,
                 "formula": item.formula,
                 "skill_label": item.skill_label,
-                "accepted_concepts": list(item.accepted_concepts),
                 "difficulty": item.difficulty,
             }
             for item in formulas

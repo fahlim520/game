@@ -6,7 +6,8 @@
     "accepted_concepts": ["indefinite_integral"],
     "skill_label": "不定积分",
     "canonical_explanation": "求 x² 的原函数，结果是 x³/3 + C。",
-    "difficulty": 1
+    "difficulty": 1,
+    "latex": "\\int x^2\\,dx"
   },
   {
     "id": "calc_definite_integral_sin",
@@ -15,7 +16,8 @@
     "accepted_concepts": ["definite_integral", "newton_leibniz"],
     "skill_label": "定积分与牛顿-莱布尼茨公式",
     "canonical_explanation": "先求 sin(x) 的原函数 -cos(x)，再代入上下限计算。",
-    "difficulty": 1
+    "difficulty": 1,
+    "latex": "\\int_0^{\\pi}\\sin x\\,dx"
   },
   {
     "id": "calc_derivative_chain",
@@ -24,7 +26,8 @@
     "accepted_concepts": ["chain_rule", "derivative"],
     "skill_label": "复合函数求导",
     "canonical_explanation": "使用链式法则：cos(x²)·2x。",
-    "difficulty": 2
+    "difficulty": 2,
+    "latex": "\\frac{d}{dx}\\sin(x^2)"
   },
   {
     "id": "calc_limit_lhopital",
@@ -33,7 +36,8 @@
     "accepted_concepts": ["limit", "lhopital"],
     "skill_label": "极限与洛必达法则",
     "canonical_explanation": "该极限属于 0/0 型，可用等价无穷小或洛必达法则得到 1。",
-    "difficulty": 2
+    "difficulty": 2,
+    "latex": "\\lim_{x\\to 0}\\frac{\\sin x}{x}"
   },
   {
     "id": "calc_taylor_exp",
@@ -42,7 +46,8 @@
     "accepted_concepts": ["taylor_series", "power_series"],
     "skill_label": "泰勒级数",
     "canonical_explanation": "这是 e^x 在 x=0 处的麦克劳林级数。",
-    "difficulty": 2
+    "difficulty": 2,
+    "latex": "e^x=\\sum_{n=0}^{\\infty}\\frac{x^n}{n!}"
   },
   {
     "id": "linear_eigen_equation",
@@ -51,7 +56,8 @@
     "accepted_concepts": ["eigenvalue", "characteristic_equation", "determinant"],
     "skill_label": "特征值与特征方程",
     "canonical_explanation": "特征方程用于求矩阵 A 的特征值 λ。",
-    "difficulty": 1
+    "difficulty": 1,
+    "latex": "\\det(A-\\lambda I)=0"
   },
   {
     "id": "linear_null_space",
@@ -60,7 +66,8 @@
     "accepted_concepts": ["homogeneous_system", "null_space", "rank"],
     "skill_label": "齐次线性方程组",
     "canonical_explanation": "齐次方程组的全部解构成矩阵 A 的零空间。",
-    "difficulty": 1
+    "difficulty": 1,
+    "latex": "A\\mathbf{x}=\\mathbf{0}"
   },
   {
     "id": "linear_matrix_rank",
@@ -69,7 +76,8 @@
     "accepted_concepts": ["rank", "null_space", "rank_nullity_theorem"],
     "skill_label": "秩-零度定理",
     "canonical_explanation": "秩与零度之和等于矩阵的列数。",
-    "difficulty": 2
+    "difficulty": 2,
+    "latex": "\\operatorname{rank}(A)+\\operatorname{nullity}(A)=n"
   },
   {
     "id": "probability_conditional",
@@ -78,7 +86,8 @@
     "accepted_concepts": ["conditional_probability", "bayes"],
     "skill_label": "条件概率",
     "canonical_explanation": "当 P(B)>0 时，可用联合概率除以 B 的概率。",
-    "difficulty": 1
+    "difficulty": 1,
+    "latex": "P(A\\mid B)=\\frac{P(A\\cap B)}{P(B)}"
   },
   {
     "id": "probability_bayes",
@@ -87,7 +96,8 @@
     "accepted_concepts": ["bayes", "conditional_probability", "total_probability"],
     "skill_label": "贝叶斯公式",
     "canonical_explanation": "贝叶斯公式利用先验概率和似然更新后验概率。",
-    "difficulty": 2
+    "difficulty": 2,
+    "latex": "P(A\\mid B)=\\frac{P(B\\mid A)P(A)}{P(B)}"
   },
   {
     "id": "probability_expectation",
@@ -96,7 +106,8 @@
     "accepted_concepts": ["expectation", "discrete_random_variable"],
     "skill_label": "离散型随机变量的期望",
     "canonical_explanation": "期望是随机变量取值与其概率乘积的加权和。",
-    "difficulty": 1
+    "difficulty": 1,
+    "latex": "\\mathbb{E}[X]=\\sum_i x_i p_i"
   },
   {
     "id": "probability_variance",
@@ -105,7 +116,8 @@
     "accepted_concepts": ["variance", "expectation"],
     "skill_label": "方差",
     "canonical_explanation": "方差可由二阶矩减去一阶矩的平方得到。",
-    "difficulty": 2
+    "difficulty": 2,
+    "latex": "\\operatorname{Var}(X)=\\mathbb{E}[X^2]-\\mathbb{E}[X]^2"
   },
   {
     "id": "physics_newton_second",
@@ -114,7 +126,8 @@
     "accepted_concepts": ["newton_second_law", "force_analysis"],
     "skill_label": "牛顿第二定律",
     "canonical_explanation": "合外力等于质量与加速度的乘积。",
-    "difficulty": 1
+    "difficulty": 1,
+    "latex": "\\mathbf{F}=m\\mathbf{a}"
   },
   {
     "id": "physics_kinetic_energy",
@@ -123,7 +136,8 @@
     "accepted_concepts": ["kinetic_energy", "work_energy_theorem"],
     "skill_label": "动能定理",
     "canonical_explanation": "动能由质量与速度平方共同决定。",
-    "difficulty": 1
+    "difficulty": 1,
+    "latex": "E_k=\\frac{1}{2}mv^2"
   },
   {
     "id": "physics_gravitation",
@@ -132,7 +146,8 @@
     "accepted_concepts": ["universal_gravitation", "force_analysis"],
     "skill_label": "万有引力定律",
     "canonical_explanation": "两质点间引力与质量乘积成正比，与距离平方成反比。",
-    "difficulty": 2
+    "difficulty": 2,
+    "latex": "F=G\\frac{m_1m_2}{r^2}"
   },
   {
     "id": "physics_coulomb",
@@ -141,7 +156,8 @@
     "accepted_concepts": ["coulomb_law", "electrostatic_force"],
     "skill_label": "库仑定律",
     "canonical_explanation": "点电荷间静电力与电荷量乘积成正比，与距离平方成反比。",
-    "difficulty": 2
+    "difficulty": 2,
+    "latex": "F=k\\frac{q_1q_2}{r^2}"
   },
   {
     "id": "physics_gauss",
@@ -150,7 +166,8 @@
     "accepted_concepts": ["gauss_law", "electric_flux"],
     "skill_label": "高斯定理",
     "canonical_explanation": "闭合曲面的电通量等于包围电荷量除以真空介电常数。",
-    "difficulty": 3
+    "difficulty": 3,
+    "latex": "\\oint \\mathbf{E}\\cdot d\\mathbf{A}=\\frac{Q}{\\varepsilon_0}"
   },
   {
     "id": "physics_schrodinger",
@@ -159,6 +176,167 @@
     "accepted_concepts": ["schrodinger_equation", "quantum_state"],
     "skill_label": "薛定谔方程",
     "canonical_explanation": "方程描述量子态随时间的演化。",
-    "difficulty": 3
+    "difficulty": 3,
+    "latex": "i\\hbar\\frac{\\partial\\psi}{\\partial t}=\\hat{H}\\psi"
+  },
+  {
+    "id": "mechanics_euler_lagrange",
+    "subject": "physics",
+    "formula": "d/dt(∂L/∂q̇) - ∂L/∂q = 0",
+    "accepted_concepts": ["lagrangian", "generalized_coordinates", "euler_lagrange_equation"],
+    "skill_label": "拉格朗日方程",
+    "canonical_explanation": "欧拉-拉格朗日方程用于从拉格朗日量推导广义坐标下的运动方程。",
+    "difficulty": 3,
+    "latex": "\\frac{d}{dt}\\left(\\frac{\\partial L}{\\partial\\dot{q}}\\right)-\\frac{\\partial L}{\\partial q}=0"
+  },
+  {
+    "id": "mechanics_angular_momentum",
+    "subject": "physics",
+    "formula": "dL/dt = τ",
+    "accepted_concepts": ["angular_momentum", "torque", "rotational_dynamics"],
+    "skill_label": "角动量定理",
+    "canonical_explanation": "系统角动量的时间变化率等于合外力矩。",
+    "difficulty": 2,
+    "latex": "\\frac{d\\mathbf{L}}{dt}=\\boldsymbol{\\tau}"
+  },
+  {
+    "id": "mechanics_moment_inertia",
+    "subject": "physics",
+    "formula": "I = ∫ r² dm",
+    "accepted_concepts": ["moment_of_inertia", "rotational_dynamics"],
+    "skill_label": "转动惯量",
+    "canonical_explanation": "连续体的转动惯量由质量微元对转轴的距离平方积分得到。",
+    "difficulty": 2,
+    "latex": "I=\\int r^2\\,dm"
+  },
+  {
+    "id": "mechanics_bernoulli",
+    "subject": "physics",
+    "formula": "p + 1/2 ρv² + ρgh = C",
+    "accepted_concepts": ["bernoulli_equation", "fluid_continuity", "ideal_fluid"],
+    "skill_label": "伯努利方程",
+    "canonical_explanation": "理想不可压缩定常流动中，压强项、动能密度项和重力势能密度项之和守恒。",
+    "difficulty": 2,
+    "latex": "p+\\frac{1}{2}\\rho v^2+\\rho gh=C"
+  },
+  {
+    "id": "mechanics_navier_stokes",
+    "subject": "physics",
+    "formula": "ρ(∂v/∂t + v·∇v) = -∇p + μ∇²v + f",
+    "accepted_concepts": ["navier_stokes", "viscous_flow", "fluid_continuity"],
+    "skill_label": "纳维-斯托克斯方程",
+    "canonical_explanation": "方程描述黏性不可压缩流体的动量守恒，包含惯性项、压力、黏性力和体积力。",
+    "difficulty": 3,
+    "latex": "\\rho\\left(\\frac{\\partial \\mathbf{v}}{\\partial t}+\\mathbf{v}\\cdot\\nabla\\mathbf{v}\\right)=-\\nabla p+\\mu\\nabla^2\\mathbf{v}+\\mathbf{f}"
+  },
+  {
+    "id": "mechanics_wave_equation",
+    "subject": "physics",
+    "formula": "∂²u/∂t² = v²∇²u",
+    "accepted_concepts": ["wave_equation", "wave_motion"],
+    "skill_label": "波动方程",
+    "canonical_explanation": "波动方程描述扰动以波速 v 在空间中传播。",
+    "difficulty": 2,
+    "latex": "\\frac{\\partial^2u}{\\partial t^2}=v^2\\nabla^2u"
+  },
+  {
+    "id": "thermo_first_law",
+    "subject": "physics",
+    "formula": "dU = δQ - δW",
+    "accepted_concepts": ["first_law_thermodynamics", "internal_energy", "heat_and_work"],
+    "skill_label": "热力学第一定律",
+    "canonical_explanation": "系统内能变化等于吸热减去系统对外做功。",
+    "difficulty": 2,
+    "latex": "dU=\\delta Q-\\delta W"
+  },
+  {
+    "id": "thermo_ideal_gas",
+    "subject": "physics",
+    "formula": "pV = nRT",
+    "accepted_concepts": ["ideal_gas_law", "state_equation"],
+    "skill_label": "理想气体状态方程",
+    "canonical_explanation": "理想气体的压强、体积和热力学温度通过物质的量与气体常数联系。",
+    "difficulty": 1,
+    "latex": "pV=nRT"
+  },
+  {
+    "id": "thermo_entropy",
+    "subject": "physics",
+    "formula": "dS = δQ_rev/T",
+    "accepted_concepts": ["entropy", "reversible_process"],
+    "skill_label": "熵变",
+    "canonical_explanation": "可逆过程的熵变由可逆吸热除以热力学温度定义。",
+    "difficulty": 2,
+    "latex": "dS=\\frac{\\delta Q_{\\mathrm{rev}}}{T}"
+  },
+  {
+    "id": "thermo_carnot",
+    "subject": "physics",
+    "formula": "η = 1 - T_C/T_H",
+    "accepted_concepts": ["carnot_cycle", "heat_engine", "thermodynamic_efficiency"],
+    "skill_label": "卡诺循环效率",
+    "canonical_explanation": "可逆卡诺热机的效率只由高温热源和低温热源的温度决定。",
+    "difficulty": 2,
+    "latex": "\\eta=1-\\frac{T_C}{T_H}"
+  },
+  {
+    "id": "thermo_boltzmann",
+    "subject": "physics",
+    "formula": "S = k_B ln Ω",
+    "accepted_concepts": ["boltzmann_entropy", "microstates", "statistical_entropy"],
+    "skill_label": "玻尔兹曼熵",
+    "canonical_explanation": "熵与系统可达微观状态数的对数成正比。",
+    "difficulty": 3,
+    "latex": "S=k_B\\ln\\Omega"
+  },
+  {
+    "id": "thermo_partition",
+    "subject": "physics",
+    "formula": "Z = Σ exp(-βE_i)",
+    "accepted_concepts": ["partition_function", "canonical_ensemble", "statistical_mechanics"],
+    "skill_label": "正则配分函数",
+    "canonical_explanation": "正则配分函数统计不同微观能级的玻尔兹曼权重，是连接微观状态与宏观热力学量的核心。",
+    "difficulty": 3,
+    "latex": "Z=\\sum_i e^{-\\beta E_i}"
+  },
+  {
+    "id": "thermo_maxwell_relation",
+    "subject": "physics",
+    "formula": "(∂T/∂V)_S = -(∂p/∂S)_V",
+    "accepted_concepts": ["maxwell_relation", "thermodynamic_potential"],
+    "skill_label": "麦克斯韦关系",
+    "canonical_explanation": "麦克斯韦关系来自热力学势的全微分与混合偏导相等。",
+    "difficulty": 3,
+    "latex": "\\left(\\frac{\\partial T}{\\partial V}\\right)_S=-\\left(\\frac{\\partial p}{\\partial S}\\right)_V"
+  },
+  {
+    "id": "thermo_gibbs",
+    "subject": "physics",
+    "formula": "dG = -S dT + V dp + Σ μ_i dN_i",
+    "accepted_concepts": ["gibbs_free_energy", "chemical_potential", "thermodynamic_potential"],
+    "skill_label": "吉布斯自由能",
+    "canonical_explanation": "吉布斯自由能的全微分描述温度、压强和粒子数变化对系统自由能的影响。",
+    "difficulty": 3,
+    "latex": "dG=-S\\,dT+V\\,dp+\\sum_i\\mu_i\\,dN_i"
+  },
+  {
+    "id": "thermo_maxwell_boltzmann",
+    "subject": "physics",
+    "formula": "f(v) ∝ v² exp(-mv²/2k_BT)",
+    "accepted_concepts": ["maxwell_boltzmann_distribution", "kinetic_theory"],
+    "skill_label": "麦克斯韦速度分布",
+    "canonical_explanation": "理想气体分子速率分布综合了速度空间体积因子和玻尔兹曼能量因子。",
+    "difficulty": 2,
+    "latex": "f(v)\\propto v^2\\exp\\left(-\\frac{mv^2}{2k_BT}\\right)"
+  },
+  {
+    "id": "thermo_fourier",
+    "subject": "physics",
+    "formula": "q = -k ∇T",
+    "accepted_concepts": ["fourier_law", "heat_conduction"],
+    "skill_label": "傅里叶热传导定律",
+    "canonical_explanation": "热流密度与温度梯度成正比，方向由高温指向低温。",
+    "difficulty": 2,
+    "latex": "\\mathbf{q}=-k\\nabla T"
   }
 ]

@@ -52,6 +52,12 @@ class ReportResult:
     next_steps: list[str]
 
 
+@dataclass(frozen=True)
+class PreparedMatchMatrix:
+    results: dict[str, MatchResult]
+    best_concept_id: str
+
+
 @dataclass
 class AIJob:
     name: str
@@ -132,6 +138,7 @@ class QwenAIClient:
         self.api_key = api_key or os.getenv("DASHSCOPE_API_KEY", "")
         self.base_url = (base_url or os.getenv("QWEN_BASE_URL") or "https://dashscope.aliyuncs.com/compatible-mode/v1").rstrip("/")
         self.model = model or os.getenv("QWEN_MODEL") or "qwen3.8-max"
+        self.fast_model = model or os.getenv("QWEN_FAST_MODEL") or "qwen3.8-flash"
         self.timeout = timeout or float(os.getenv("QWEN_TIMEOUT_SECONDS", "45"))
         self.session = session or requests.Session()
 
@@ -149,7 +156,10 @@ class QwenAIClient:
             "formula": formula["formula"],
             "subject": formula["subject"],
             "selected_concept": selected,
-            "candidate_concepts": candidates,
+            "candidate_concepts": [
+                {"id": item["id"], "title": item["title"]}
+                for item in candidates
+            ],
             "rules": [
                 "只根据数学或物理含义判断，不要被选项顺序影响",
                 "score 为 0 到 100 的整数",
@@ -165,7 +175,9 @@ class QwenAIClient:
                     "content": "你是学科守卫者的核心判题引擎。严格输出 JSON，不要输出 Markdown。",
                 },
                 {"role": "user", "content": json.dumps(prompt, ensure_ascii=False)},
-            ]
+            ],
+            model=self.fast_model,
+            max_tokens=260,
         )
         try:
             score = max(0, min(100, int(response["score"])))
@@ -196,11 +208,13 @@ class QwenAIClient:
             "recent_results": payload["recent_results"],
             "current_level": payload["current_level"],
             "enemy_index": payload["enemy_index"],
+            "avoid_formula_ids": payload.get("avoid_formula_ids", []),
             "rules": [
                 "level 只能是 1、2、3",
                 "formula_count 只能是 1、2、3，并且不能超过 level",
                 "连续答对时提高挑战，连续答错时降低挑战",
                 "formula_ids 必须来自 available_formulas，数量等于 formula_count",
+                "除非没有其他选择，否则不要使用 avoid_formula_ids 中的公式",
                 "enemy_name 和 reason 使用简短中文",
                 "hint_enabled 为布尔值，为 true 时 hint_text 给出一条不直接泄露答案的中文提示",
             ],
@@ -212,7 +226,9 @@ class QwenAIClient:
                     "content": "你是动态难度决策器。严格输出 JSON，不要输出 Markdown。",
                 },
                 {"role": "user", "content": json.dumps(prompt, ensure_ascii=False)},
-            ]
+            ],
+            model=self.fast_model,
+            max_tokens=420,
         )
         available = {item["id"] for item in payload["available_formulas"]}
         try:
@@ -265,10 +281,80 @@ class QwenAIClient:
             raise AIError("AI 返回了不完整的学习报告")
         return ReportResult(summary, strengths, weaknesses, chapters, next_steps)
 
+    def prepare_match_matrix(self, payload: dict[str, Any]) -> PreparedMatchMatrix:
+        """Score every visible candidate once so the throw resolves immediately."""
+        formula = payload["formula"]
+        candidates = [
+            {
+                "id": item["id"],
+                "title": item["title"],
+                "description": item.get("description", ""),
+            }
+            for item in payload["candidate_concepts"]
+        ]
+        prompt = {
+            "task": "一次判完当前公式与全部候选知识点的关联度",
+            "formula_id": formula["id"],
+            "formula": formula["formula"],
+            "subject": formula["subject"],
+            "candidate_concepts": candidates,
+            "rules": [
+                "results 必须覆盖每一个候选 concept_id",
+                "score 为 0 到 100 的整数，低于 80 视为不匹配",
+                "best_concept_id 必须是最合适的候选知识点",
+                "explanation 用一句中文解释公式真正需要的知识点",
+                "每项 feedback 用一句简短中文说明为什么匹配或为什么不够准确",
+            ],
+        }
+        response = self._chat_json(
+            [
+                {
+                    "role": "system",
+                    "content": "你是学科守卫者的批量判题引擎。严格输出 JSON，不要输出 Markdown。",
+                },
+                {"role": "user", "content": json.dumps(prompt, ensure_ascii=False)},
+            ],
+            model=self.fast_model,
+            max_tokens=900,
+        )
+        raw_results = response.get("results")
+        if not isinstance(raw_results, list):
+            raise AIError(f"批量判题结果字段不完整: {response}")
+        explanation = str(response.get("explanation", "")).strip()
+        best_concept_id = str(response.get("best_concept_id", "")).strip()
+        valid_ids = {item["id"] for item in candidates}
+        if best_concept_id not in valid_ids:
+            raise AIError(f"批量判题返回了不存在的知识点: {best_concept_id}")
+
+        results: dict[str, MatchResult] = {}
+        for item in raw_results:
+            try:
+                concept_id = str(item["concept_id"]).strip()
+                score = max(0, min(100, int(item["score"])))
+                feedback = str(item.get("feedback", "")).strip()
+            except (KeyError, TypeError, ValueError):
+                continue
+            if concept_id not in valid_ids:
+                continue
+            if not feedback:
+                feedback = "该知识点与当前公式的核心步骤不够一致。"
+            results[concept_id] = MatchResult(
+                score=score,
+                accepted=score >= 80,
+                explanation=explanation or "AI 已完成该公式的知识点关联分析。",
+                best_concept_id=best_concept_id,
+                feedback=feedback,
+            )
+        if not results:
+            raise AIError("AI 没有返回可用的批量判题结果")
+        return PreparedMatchMatrix(results=results, best_concept_id=best_concept_id)
+
     def _chat_json(
         self,
         messages: list[dict[str, str]],
         max_tokens: int = 700,
+        model: str | None = None,
+        enable_thinking: bool = False,
     ) -> dict[str, Any]:
         if not self.api_key:
             raise AIError(
@@ -276,32 +362,47 @@ class QwenAIClient:
                 "或在用户级 .codex/.env 中配置。"
             )
 
-        payload: dict[str, Any] = {
-            "model": self.model,
-            "messages": messages,
-            "temperature": 0.25,
-            "max_tokens": max_tokens,
-            "response_format": {"type": "json_object"},
-        }
-        response = self.session.post(
-            f"{self.base_url}/chat/completions",
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-            },
-            json=payload,
-            timeout=self.timeout,
-        )
-        if response.status_code >= 400:
-            body = response.text[:500]
-            raise AIError(f"Qwen API 请求失败 ({response.status_code}): {body}")
-        try:
-            content = response.json()["choices"][0]["message"]["content"]
-        except (KeyError, IndexError, TypeError, ValueError) as exc:
-            raise AIError(f"Qwen API 返回格式异常: {response.text[:500]}") from exc
-        if isinstance(content, list):
-            content = "".join(part.get("text", "") for part in content if isinstance(part, dict))
-        return self._parse_json_object(str(content))
+        last_error: AIError | None = None
+        for use_json_mode in (True, False):
+            payload: dict[str, Any] = {
+                "model": model or self.model,
+                "messages": messages,
+                "temperature": 0.25,
+                "max_tokens": max_tokens,
+                "enable_thinking": enable_thinking,
+            }
+            if use_json_mode:
+                payload["response_format"] = {"type": "json_object"}
+            if not use_json_mode:
+                time.sleep(0.2)
+            response = self.session.post(
+                f"{self.base_url}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                },
+                json=payload,
+                timeout=self.timeout,
+            )
+            if response.status_code >= 400:
+                body = response.text[:500]
+                last_error = AIError(f"Qwen API 请求失败 ({response.status_code}): {body}")
+                continue
+            try:
+                content = response.json()["choices"][0]["message"]["content"]
+            except (KeyError, IndexError, TypeError, ValueError) as exc:
+                last_error = AIError(f"Qwen API 返回格式异常: {response.text[:500]}")
+                continue
+            if isinstance(content, list):
+                content = "".join(part.get("text", "") for part in content if isinstance(part, dict))
+            if not str(content).strip():
+                last_error = AIError("Qwen API 返回了空内容")
+                continue
+            try:
+                return self._parse_json_object(str(content))
+            except AIError as exc:
+                last_error = exc
+        raise last_error or AIError("Qwen API 调用失败")
 
     @staticmethod
     def _parse_json_object(content: str) -> dict[str, Any]:

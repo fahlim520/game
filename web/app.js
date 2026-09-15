@@ -11,6 +11,13 @@ const SUBJECT_LABELS = {
   linear_probability: "线代/概率",
   physics: "大物",
 };
+const MONSTER_ASSETS = {
+  calculus: "/assets/kenney/slime.png",
+  linear_probability: "/assets/kenney/demon.png",
+  physics: "/assets/kenney/ghost.png",
+  advanced: "/assets/kenney/spider.png",
+  elite: "/assets/kenney/scorpion.png",
+};
 
 const state = {
   token: "",
@@ -36,6 +43,7 @@ const state = {
   lastResult: "",
   decisionText: "等待建立 AI 会话。",
 };
+let lastRenderedFormulaKey = "";
 
 const dom = {
   progressText: document.querySelector("#progressText"),
@@ -48,6 +56,7 @@ const dom = {
   enemyIndex: document.querySelector("#enemyIndex"),
   enemyName: document.querySelector("#enemyName"),
   monsterCreature: document.querySelector("#monsterCreature"),
+  monsterSprite: document.querySelector("#monsterSprite"),
   formulaText: document.querySelector("#formulaText"),
   formulaSkill: document.querySelector("#formulaSkill"),
   formulaPanel: document.querySelector("#formulaPanel"),
@@ -210,16 +219,27 @@ function render() {
 
   const formula = currentFormula();
   if (formula) {
-    dom.formulaText.textContent = formula.formula;
+    renderFormula(formula);
     dom.formulaSkill.textContent = `${SUBJECT_LABELS[formula.subject] || formula.subject} · ${formula.skill_label}`;
     dom.formulaPanel.style.borderColor = SUBJECT_COLORS[formula.subject] || "#a882ff";
   } else if (state.enemy) {
+    lastRenderedFormulaKey = "";
     dom.formulaText.textContent = "本怪公式已全部清除";
     dom.formulaSkill.textContent = "等待 AI 生成下一只怪物";
   } else {
+    lastRenderedFormulaKey = "";
     dom.formulaText.textContent = state.gameOver ? "本局已结束" : "AI 正在生成怪物";
     dom.formulaSkill.textContent = state.decisionText;
   }
+
+  const progress = maxLives > 0 ? (maxLives - lives) / maxLives : 0;
+  dom.monsterCreature.style.setProperty("--monster-y", `${Math.round(progress * 170)}px`);
+  dom.monsterCreature.style.setProperty("--monster-scale", `${(1 + progress * 0.36).toFixed(3)}`);
+  dom.formulaPanel.style.setProperty("--formula-shift", `${Math.round(progress * 14)}px`);
+  dom.monsterZone.classList.toggle("near", lives <= 2);
+  dom.monsterSprite.src = formula
+    ? monsterAssetFor(formula, sessionState.level || 2)
+    : MONSTER_ASSETS.calculus;
 
   if (state.enemy) {
     const formulas = state.enemy.monster.formulas;
@@ -247,6 +267,35 @@ function renderWeakConcepts() {
     .slice(0, 3)
     .map((item) => `<li>${escapeHtml(item.title)} · ${Number(item.accuracy).toFixed(0)}%</li>`);
   return weak.length ? weak.join("") : "<li>等待答题数据</li>";
+}
+
+function renderFormula(formula) {
+  const key = `${formula.id}:${formula.latex || formula.formula}`;
+  if (key === lastRenderedFormulaKey) {
+    return;
+  }
+  lastRenderedFormulaKey = key;
+  const latex = formula.latex || formula.formula;
+  if (window.MathJax?.typesetPromise) {
+    dom.formulaText.textContent = `\\[${latex}\\]`;
+    window.MathJax.typesetPromise([dom.formulaText]).catch(() => {
+      dom.formulaText.textContent = formula.formula;
+    });
+  } else {
+    dom.formulaText.textContent = formula.formula;
+  }
+}
+
+function monsterAssetFor(formula, level) {
+  if (level >= 3) {
+    return state.enemy?.decision?.formulaCount > 1
+      ? MONSTER_ASSETS.elite
+      : MONSTER_ASSETS.advanced;
+  }
+  if (formula.skill_label?.includes("热") || formula.skill_label?.includes("熵")) {
+    return MONSTER_ASSETS.advanced;
+  }
+  return MONSTER_ASSETS[formula.subject] || MONSTER_ASSETS.calculus;
 }
 
 function renderBooks() {

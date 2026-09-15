@@ -64,7 +64,7 @@ def test_match_answer_uses_validated_model_output() -> None:
     assert result.score == 96
     assert result.best_concept_id == "indefinite_integral"
     assert session.requests[0][0].endswith("/chat/completions")
-    assert session.requests[0][2]["response_format"] == {"type": "json_object"}
+    assert session.requests[0][2]["model"] == "qwen3.8-flash"
 
 
 def test_enemy_decision_is_clamped_and_validated() -> None:
