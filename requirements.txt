@@ -1,0 +1,6 @@
+mediapipe>=0.10.14,<0.10.22
+numpy>=1.26,<2
+opencv-contrib-python>=4.9,<5
+pygame-ce>=2.5,<3
+python-dotenv>=1.0,<2
+requests>=2.31,<3

@@ -1,0 +1,164 @@
+[
+  {
+    "id": "calc_indefinite_integral_x2",
+    "subject": "calculus",
+    "formula": "∫ x² dx",
+    "accepted_concepts": ["indefinite_integral"],
+    "skill_label": "不定积分",
+    "canonical_explanation": "求 x² 的原函数，结果是 x³/3 + C。",
+    "difficulty": 1
+  },
+  {
+    "id": "calc_definite_integral_sin",
+    "subject": "calculus",
+    "formula": "∫₀^π sin(x) dx",
+    "accepted_concepts": ["definite_integral", "newton_leibniz"],
+    "skill_label": "定积分与牛顿-莱布尼茨公式",
+    "canonical_explanation": "先求 sin(x) 的原函数 -cos(x)，再代入上下限计算。",
+    "difficulty": 1
+  },
+  {
+    "id": "calc_derivative_chain",
+    "subject": "calculus",
+    "formula": "d/dx sin(x²)",
+    "accepted_concepts": ["chain_rule", "derivative"],
+    "skill_label": "复合函数求导",
+    "canonical_explanation": "使用链式法则：cos(x²)·2x。",
+    "difficulty": 2
+  },
+  {
+    "id": "calc_limit_lhopital",
+    "subject": "calculus",
+    "formula": "lim x→0 sin(x)/x",
+    "accepted_concepts": ["limit", "lhopital"],
+    "skill_label": "极限与洛必达法则",
+    "canonical_explanation": "该极限属于 0/0 型，可用等价无穷小或洛必达法则得到 1。",
+    "difficulty": 2
+  },
+  {
+    "id": "calc_taylor_exp",
+    "subject": "calculus",
+    "formula": "e^x = Σ xⁿ/n!",
+    "accepted_concepts": ["taylor_series", "power_series"],
+    "skill_label": "泰勒级数",
+    "canonical_explanation": "这是 e^x 在 x=0 处的麦克劳林级数。",
+    "difficulty": 2
+  },
+  {
+    "id": "linear_eigen_equation",
+    "subject": "linear_probability",
+    "formula": "det(A - λI) = 0",
+    "accepted_concepts": ["eigenvalue", "characteristic_equation", "determinant"],
+    "skill_label": "特征值与特征方程",
+    "canonical_explanation": "特征方程用于求矩阵 A 的特征值 λ。",
+    "difficulty": 1
+  },
+  {
+    "id": "linear_null_space",
+    "subject": "linear_probability",
+    "formula": "A x = 0",
+    "accepted_concepts": ["homogeneous_system", "null_space", "rank"],
+    "skill_label": "齐次线性方程组",
+    "canonical_explanation": "齐次方程组的全部解构成矩阵 A 的零空间。",
+    "difficulty": 1
+  },
+  {
+    "id": "linear_matrix_rank",
+    "subject": "linear_probability",
+    "formula": "rank(A) + nullity(A) = n",
+    "accepted_concepts": ["rank", "null_space", "rank_nullity_theorem"],
+    "skill_label": "秩-零度定理",
+    "canonical_explanation": "秩与零度之和等于矩阵的列数。",
+    "difficulty": 2
+  },
+  {
+    "id": "probability_conditional",
+    "subject": "linear_probability",
+    "formula": "P(A|B) = P(A∩B) / P(B)",
+    "accepted_concepts": ["conditional_probability", "bayes"],
+    "skill_label": "条件概率",
+    "canonical_explanation": "当 P(B)>0 时，可用联合概率除以 B 的概率。",
+    "difficulty": 1
+  },
+  {
+    "id": "probability_bayes",
+    "subject": "linear_probability",
+    "formula": "P(A|B) = P(B|A)P(A) / P(B)",
+    "accepted_concepts": ["bayes", "conditional_probability", "total_probability"],
+    "skill_label": "贝叶斯公式",
+    "canonical_explanation": "贝叶斯公式利用先验概率和似然更新后验概率。",
+    "difficulty": 2
+  },
+  {
+    "id": "probability_expectation",
+    "subject": "linear_probability",
+    "formula": "E(X) = Σ xᵢpᵢ",
+    "accepted_concepts": ["expectation", "discrete_random_variable"],
+    "skill_label": "离散型随机变量的期望",
+    "canonical_explanation": "期望是随机变量取值与其概率乘积的加权和。",
+    "difficulty": 1
+  },
+  {
+    "id": "probability_variance",
+    "subject": "linear_probability",
+    "formula": "Var(X) = E(X²) - [E(X)]²",
+    "accepted_concepts": ["variance", "expectation"],
+    "skill_label": "方差",
+    "canonical_explanation": "方差可由二阶矩减去一阶矩的平方得到。",
+    "difficulty": 2
+  },
+  {
+    "id": "physics_newton_second",
+    "subject": "physics",
+    "formula": "F = m a",
+    "accepted_concepts": ["newton_second_law", "force_analysis"],
+    "skill_label": "牛顿第二定律",
+    "canonical_explanation": "合外力等于质量与加速度的乘积。",
+    "difficulty": 1
+  },
+  {
+    "id": "physics_kinetic_energy",
+    "subject": "physics",
+    "formula": "Eₖ = ½ m v²",
+    "accepted_concepts": ["kinetic_energy", "work_energy_theorem"],
+    "skill_label": "动能定理",
+    "canonical_explanation": "动能由质量与速度平方共同决定。",
+    "difficulty": 1
+  },
+  {
+    "id": "physics_gravitation",
+    "subject": "physics",
+    "formula": "F = G m₁m₂ / r²",
+    "accepted_concepts": ["universal_gravitation", "force_analysis"],
+    "skill_label": "万有引力定律",
+    "canonical_explanation": "两质点间引力与质量乘积成正比，与距离平方成反比。",
+    "difficulty": 2
+  },
+  {
+    "id": "physics_coulomb",
+    "subject": "physics",
+    "formula": "F = k q₁q₂ / r²",
+    "accepted_concepts": ["coulomb_law", "electrostatic_force"],
+    "skill_label": "库仑定律",
+    "canonical_explanation": "点电荷间静电力与电荷量乘积成正比，与距离平方成反比。",
+    "difficulty": 2
+  },
+  {
+    "id": "physics_gauss",
+    "subject": "physics",
+    "formula": "∮ E · dA = Q / ε₀",
+    "accepted_concepts": ["gauss_law", "electric_flux"],
+    "skill_label": "高斯定理",
+    "canonical_explanation": "闭合曲面的电通量等于包围电荷量除以真空介电常数。",
+    "difficulty": 3
+  },
+  {
+    "id": "physics_schrodinger",
+    "subject": "physics",
+    "formula": "iℏ ∂ψ/∂t = Ĥψ",
+    "accepted_concepts": ["schrodinger_equation", "quantum_state"],
+    "skill_label": "薛定谔方程",
+    "canonical_explanation": "方程描述量子态随时间的演化。",
+    "difficulty": 3
+  }
+]
