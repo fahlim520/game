@@ -603,7 +603,11 @@ async function initCamera() {
   await dom.cameraVideo.play();
   state.cameraReady = true;
   dom.cameraState.textContent = "摄像头在线";
+  dom.gestureState.textContent = "手势加载中";
+  initializeHandTracking();
+}
 
+async function initializeHandTracking() {
   try {
     const vision = await import(MEDIAPIPE_BUNDLE);
     const fileset = await vision.FilesetResolver.forVisionTasks(MEDIAPIPE_WASM);
@@ -782,3 +786,11 @@ initAccessToken();
 updateCursor(state.cursor);
 render();
 animationLoop();
+window.addEventListener("load", () => {
+  window.MathJax?.startup?.promise?.then(() => {
+    lastRenderedFormulaKey = "";
+    if (state.enemy) {
+      render();
+    }
+  });
+});
