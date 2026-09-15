@@ -768,6 +768,11 @@ button {
   border: 1px solid var(--cyan);
 }
 
+.primary-button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
 .secondary-button {
   color: var(--text);
   background: transparent;

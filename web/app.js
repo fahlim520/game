@@ -784,6 +784,7 @@ dom.reloadButton.addEventListener("click", () => window.location.reload());
 
 initAccessToken();
 updateCursor(state.cursor);
+dom.startButton.disabled = false;
 render();
 animationLoop();
 window.addEventListener("load", () => {
