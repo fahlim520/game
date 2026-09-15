@@ -14,6 +14,7 @@ import random
 import secrets
 import threading
 import time
+import traceback
 import uuid
 from collections import deque
 from dataclasses import dataclass, field
@@ -183,6 +184,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         except (ValueError, KeyError, TypeError) as exc:
             self._json_error(HTTPStatus.BAD_REQUEST, str(exc))
         except Exception as exc:
+            traceback.print_exc()
             self._json_error(HTTPStatus.INTERNAL_SERVER_ERROR, f"{type(exc).__name__}: {exc}")
 
     def do_OPTIONS(self) -> None:

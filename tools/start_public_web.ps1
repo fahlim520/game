@@ -37,13 +37,13 @@ if ($existingHealth -and $existingHealth.ok) {
     $token = [guid]::NewGuid().ToString('N')
     $token | Set-Content -LiteralPath $tokenFile -Encoding utf8
 
-    $serverProcess = Start-Process -FilePath $python `
-        -ArgumentList @('web_server.py', '--host', '127.0.0.1', '--port', '8000', '--access-token', $token, '--target-enemies', '30') `
+$serverProcess = Start-Process -FilePath $python `
+        -ArgumentList @('-u', 'web_server.py', '--host', '127.0.0.1', '--port', '8000', '--access-token', $token, '--target-enemies', '30') `
         -WorkingDirectory $root `
         -WindowStyle Hidden `
         -RedirectStandardOutput $serverOut `
         -RedirectStandardError $serverErr `
-        -PassThru
+    -PassThru
 
     $ready = $false
     for ($index = 0; $index -lt 40; $index++) {

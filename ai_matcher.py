@@ -363,45 +363,58 @@ class QwenAIClient:
             )
 
         last_error: AIError | None = None
-        for use_json_mode in (True, False):
-            payload: dict[str, Any] = {
-                "model": model or self.model,
-                "messages": messages,
-                "temperature": 0.25,
-                "max_tokens": max_tokens,
-                "enable_thinking": enable_thinking,
-            }
-            if use_json_mode:
-                payload["response_format"] = {"type": "json_object"}
-            if not use_json_mode:
-                time.sleep(0.2)
-            response = self.session.post(
-                f"{self.base_url}/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json",
-                },
-                json=payload,
-                timeout=self.timeout,
-            )
-            if response.status_code >= 400:
-                body = response.text[:500]
-                last_error = AIError(f"Qwen API 请求失败 ({response.status_code}): {body}")
-                continue
-            try:
-                content = response.json()["choices"][0]["message"]["content"]
-            except (KeyError, IndexError, TypeError, ValueError) as exc:
-                last_error = AIError(f"Qwen API 返回格式异常: {response.text[:500]}")
-                continue
-            if isinstance(content, list):
-                content = "".join(part.get("text", "") for part in content if isinstance(part, dict))
-            if not str(content).strip():
-                last_error = AIError("Qwen API 返回了空内容")
-                continue
-            try:
-                return self._parse_json_object(str(content))
-            except AIError as exc:
-                last_error = exc
+        models = [model or self.model]
+        if model and model != self.model:
+            models.append(self.model)
+        for candidate_model in models:
+            for use_json_mode in (True, False):
+                payload: dict[str, Any] = {
+                    "model": candidate_model,
+                    "messages": messages,
+                    "temperature": 0.25,
+                    "max_tokens": max_tokens,
+                    "enable_thinking": enable_thinking,
+                }
+                if use_json_mode:
+                    payload["response_format"] = {"type": "json_object"}
+                if not use_json_mode:
+                    time.sleep(0.2)
+                try:
+                    response = self.session.post(
+                        f"{self.base_url}/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {self.api_key}",
+                            "Content-Type": "application/json",
+                            "Connection": "close",
+                        },
+                        json=payload,
+                        timeout=self.timeout,
+                    )
+                except requests.RequestException as exc:
+                    last_error = AIError(
+                        f"Qwen 网络连接中断，正在重试。"
+                        f"（{type(exc).__name__}: {str(exc)[:160]}）"
+                    )
+                    time.sleep(0.35)
+                    continue
+                if response.status_code >= 400:
+                    body = response.text[:500]
+                    last_error = AIError(f"Qwen API 请求失败 ({response.status_code}): {body}")
+                    continue
+                try:
+                    content = response.json()["choices"][0]["message"]["content"]
+                except (KeyError, IndexError, TypeError, ValueError) as exc:
+                    last_error = AIError(f"Qwen API 返回格式异常: {response.text[:500]}")
+                    continue
+                if isinstance(content, list):
+                    content = "".join(part.get("text", "") for part in content if isinstance(part, dict))
+                if not str(content).strip():
+                    last_error = AIError("Qwen API 返回了空内容")
+                    continue
+                try:
+                    return self._parse_json_object(str(content))
+                except AIError as exc:
+                    last_error = exc
         raise last_error or AIError("Qwen API 调用失败")
 
     @staticmethod

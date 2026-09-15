@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import requests
+
 from ai_matcher import QwenAIClient
 from game_engine import ContentBank, GameEngine
 
@@ -24,6 +26,14 @@ class FakeSession:
     def post(self, url, headers, json, timeout):
         self.requests.append((url, headers, json, timeout))
         return self.responses.pop(0)
+
+
+class FlakySession(FakeSession):
+    def post(self, url, headers, json, timeout):
+        if not self.requests:
+            self.requests.append((url, headers, json, timeout))
+            raise requests.ConnectionError("Remote end closed connection")
+        return super().post(url, headers, json, timeout)
 
 
 def test_parse_json_object_accepts_markdown_fence() -> None:
@@ -94,3 +104,36 @@ def test_enemy_decision_is_clamped_and_validated() -> None:
     assert decision.level == 3
     assert decision.formula_count == 1
     assert decision.formula_ids == [first_id]
+
+
+def test_match_answer_retries_remote_disconnect() -> None:
+    session = FlakySession(
+        [
+            FakeResponse(
+                '{"score": 92, "accepted": true, '
+                '"explanation": "连接恢复后完成判题。", '
+                '"best_concept_id": "indefinite_integral", '
+                '"feedback": "继续作答。"}'
+            )
+        ]
+    )
+    client = QwenAIClient(api_key="test-key", session=session)
+    result = client.match_answer(
+        {
+            "formula": {
+                "id": "calc_indefinite_integral_x2",
+                "formula": "∫ x² dx",
+                "subject": "calculus",
+            },
+            "selected_concept": {
+                "id": "indefinite_integral",
+                "title": "不定积分",
+            },
+            "candidate_concepts": [
+                {"id": "indefinite_integral", "title": "不定积分"},
+            ],
+        }
+    )
+
+    assert result.accepted is True
+    assert len(session.requests) == 2
