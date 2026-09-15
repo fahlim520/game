@@ -91,6 +91,30 @@ class ContentBank:
     def all_knowledge(self) -> list[KnowledgePoint]:
         return list(self.knowledge.values())
 
+    def knowledge_payload_by_subject(self) -> dict[str, list[dict[str, str]]]:
+        return {
+            subject: [
+                {
+                    "id": item.id,
+                    "title": item.title,
+                    "description": item.description,
+                    "chapter": item.chapter,
+                }
+                for item in self.knowledge_for_subject(subject)
+            ]
+            for subject in SUBJECT_ORDER
+        }
+
+    def formula_public_payload(self, formula_id: str) -> dict[str, Any]:
+        formula = self.formulas[formula_id]
+        return {
+            "id": formula.id,
+            "subject": formula.subject,
+            "formula": formula.formula,
+            "skill_label": formula.skill_label,
+            "difficulty": formula.difficulty,
+        }
+
     def formulas_for_level(self, level: int) -> list[Formula]:
         allowed = {level, max(1, level - 1)}
         return [item for item in self.formulas.values() if item.difficulty in allowed]

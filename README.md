@@ -51,6 +51,67 @@ AI 采用“约束式生成”而不是任意编题：
 python main.py --target-enemies 3
 ```
 
+## 浏览器版：链接直接玩
+
+`web_server.py` 提供评委使用的浏览器版。摄像头、手势识别和游戏界面都在浏览器运行，Qwen Key 只保存在服务器端。
+
+本地启动：
+
+```powershell
+.venv\Scripts\Activate.ps1
+python web_server.py --host 127.0.0.1 --port 8000 --access-token "your-demo-token" --target-enemies 30
+```
+
+本机访问：
+
+```text
+http://127.0.0.1:8000/?token=your-demo-token
+```
+
+如果服务器运行在你自己的电脑上，要让评委从其他电脑访问，可以使用 Cloudflare Quick Tunnel：
+
+```powershell
+cloudflared tunnel --url http://127.0.0.1:8000
+```
+
+命令会输出一个 `https://...trycloudflare.com` 地址。把访问令牌拼到链接后面：
+
+```text
+https://实际分配的地址/?token=your-demo-token
+```
+
+仓库也提供了自动化启动脚本。安装 Cloudflare Tunnel 后运行：
+
+```powershell
+.\tools\start_public_web.ps1
+```
+
+脚本会生成随机访问令牌、启动 Web 服务、建立公网隧道，并把最终链接输出到终端和 `runtime/public-link.txt`。
+
+这种模式有以下边界：
+
+- 运行服务器的电脑必须保持开机和联网。
+- Cloudflare Quick Tunnel 地址重新启动后可能变化。
+- 评委浏览器需要允许摄像头权限。
+- 你的 Qwen Key 不会出现在链接、网页源码或 GitHub 中。
+- 服务端默认对 AI 接口做每 IP 限流，访问令牌用于避免链接被随机滥用。
+- MediaPipe 浏览器运行库和手部模型已放在仓库内，不依赖 Google Storage。
+- 页面第一次进入会请求摄像头权限。摄像头不可用时仍能用鼠标完成游戏，但正式演示应使用手势。
+
+如果要长期在线，可以把同一个 `web_server.py` 部署到支持 Python 服务的云主机或 Render，并设置：
+
+```text
+DASHSCOPE_API_KEY
+WEB_ACCESS_TOKEN
+WEB_TARGET_ENEMIES=30
+```
+
+启动命令：
+
+```powershell
+python web_server.py --host 0.0.0.0 --port $PORT
+```
+
 ## 手势与备用操作
 
 手势是正式演示方式：
@@ -129,21 +190,21 @@ python main.py --smoke-test
 
 ```powershell
 python -m pytest -q
-python -m py_compile main.py game_engine.py ai_matcher.py ai_tracker.py hand_tracker.py
+python -m py_compile main.py web_server.py game_engine.py ai_matcher.py ai_tracker.py hand_tracker.py
 $env:SDL_VIDEODRIVER="dummy"
 python main.py --smoke-test --no-camera --input mouse
 ```
 
-测试覆盖公式知识关系、正确/错误判定、6 次错误失败、30 只怪物获胜、复合公式怪物和 AI JSON 解析。`--smoke-test` 不调用模型也不打开摄像头，只验证界面和基础数据可初始化。
+测试覆盖公式知识关系、正确/错误判定、6 次错误失败、30 只怪物获胜、复合公式怪物、AI JSON 解析和浏览器会话接口。`--smoke-test` 不调用模型也不打开摄像头，只验证界面和基础数据可初始化。
 
 ## AI 调用链路
 
 ```text
 摄像头帧
-  -> MediaPipe Hands 本机识别手部关键点与手势
-  -> Pygame 将手势映射为光标、抓取和投掷
+  -> 浏览器或桌面端 MediaPipe 识别手部关键点与手势
+  -> 游戏界面将手势映射为光标、抓取和投掷
   -> 当前公式 + 玩家选择 + 候选人知识点
-  -> Qwen 语义判题与错误解释
+  -> 服务端调用 Qwen 语义判题与错误解释
   -> 关联度、判定和反馈显示在屏幕上
   -> 更新正确率、反应时间和知识点统计
   -> Qwen 读取最新学情，设计下一只怪物
@@ -157,6 +218,13 @@ python main.py --smoke-test --no-camera --input mouse
 ```text
 knowledge-defender/
 ├── main.py                 # Pygame 界面、状态机、游戏循环
+├── web_server.py           # 浏览器版服务器、会话和 AI 代理
+├── web/
+│   ├── index.html          # 浏览器游戏界面
+│   ├── styles.css          # 响应式界面样式
+│   ├── app.js              # 浏览器摄像头、手势和游戏状态
+│   ├── models/             # 本地手部识别模型
+│   └── vendor/             # MediaPipe Tasks Vision 与 WASM
 ├── hand_tracker.py         # MediaPipe Hands 与手势识别
 ├── game_engine.py          # 怪物、公式、答题、胜负和学情统计
 ├── ai_matcher.py           # Qwen API、结构化输出、后台工作线程
@@ -168,7 +236,8 @@ knowledge-defender/
 │   └── knowledge.json      # 知识点、章节和说明
 ├── tests/
 │   ├── test_game_engine.py
-│   └── test_ai_matcher.py
+│   ├── test_ai_matcher.py
+│   └── test_web_server.py
 ├── docs/
 │   └── preview.png
 ├── assets/                 # 当前使用 Pygame 几何图形，无外部素材依赖

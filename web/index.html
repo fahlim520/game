@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#09111a">
+  <title>学科守卫者</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <strong>学科守卫者</strong>
+        <span>KNOWLEDGE DEFENDER</span>
+      </div>
+      <div class="top-stat">
+        <span class="label">已击破</span>
+        <strong id="progressText">0 / 30</strong>
+      </div>
+      <div class="top-stat lives-stat">
+        <span class="label">防线耐久</span>
+        <div id="lifeDots" class="life-dots" aria-label="防线耐久"></div>
+      </div>
+      <div class="top-stat">
+        <span class="label">当前难度</span>
+        <strong id="levelText">L1</strong>
+      </div>
+      <div class="ai-online">
+        <span id="aiDot" class="status-dot"></span>
+        <div>
+          <strong id="aiOnlineText">AI 待命</strong>
+          <small id="aiTopStatus">等待建立会话</small>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="game-stage" id="gameStage">
+        <div class="camera-panel">
+          <canvas id="cameraCanvas" width="300" height="180"></canvas>
+          <video id="cameraVideo" class="camera-source" autoplay muted playsinline></video>
+          <div class="camera-footer">
+            <span id="cameraState">摄像头未连接</span>
+            <span id="gestureState">移动</span>
+          </div>
+        </div>
+
+        <div class="battle-line">
+          <span class="line-label">怪物推进线</span>
+          <div id="battleTicks" class="battle-ticks"></div>
+        </div>
+
+        <div id="monsterZone" class="monster-zone">
+          <div class="monster-meta">
+            <span id="enemyIndex">怪物 #1</span>
+            <strong id="enemyName">等待 AI 生成</strong>
+          </div>
+          <div id="monsterCreature" class="monster-creature">
+            <span class="eye left"></span>
+            <span class="eye right"></span>
+            <span class="mouth"></span>
+          </div>
+          <div id="formulaPanel" class="formula-panel">
+            <strong id="formulaText">AI 正在分析学情...</strong>
+            <span id="formulaSkill">下一只怪物即将出现</span>
+          </div>
+          <div id="formulaSlots" class="formula-slots"></div>
+        </div>
+
+        <div class="held-strip" id="heldStrip">
+          <span>当前知识点</span>
+          <strong id="heldText">尚未抓取</strong>
+        </div>
+
+        <div class="book-row" id="bookRow"></div>
+        <div class="content-drawer" id="contentDrawer"></div>
+      </section>
+
+      <aside class="ai-sidebar">
+        <div class="sidebar-heading">
+          <div>
+            <span class="eyebrow">QWEN LIVE</span>
+            <h2>AI 学情面板</h2>
+          </div>
+          <span id="modelBadge" class="badge">模型</span>
+        </div>
+
+        <div class="metric-grid">
+          <article>
+            <span>正确率</span>
+            <strong id="accuracyValue">0.0%</strong>
+          </article>
+          <article>
+            <span>平均反应</span>
+            <strong id="reactionValue">0.00s</strong>
+          </article>
+          <article>
+            <span>错误次数</span>
+            <strong id="wrongValue">0</strong>
+          </article>
+          <article>
+            <span>当前连击</span>
+            <strong id="streakValue">0</strong>
+          </article>
+        </div>
+
+        <section class="sidebar-section">
+          <h3>薄弱知识点</h3>
+          <ol id="weakConcepts" class="plain-list">
+            <li>等待答题数据</li>
+          </ol>
+        </section>
+
+        <section class="sidebar-section decision-box">
+          <h3>AI 当前决策</h3>
+          <p id="decisionText">正在准备会话。</p>
+          <div id="hintBox" class="hint-box hidden">
+            <span>AI 提示</span>
+            <strong id="hintText"></strong>
+          </div>
+        </section>
+
+        <section class="sidebar-section">
+          <h3>最近结论</h3>
+          <p id="lastResultText">尚无判题结果。</p>
+        </section>
+
+        <section class="sidebar-section trace-box">
+          <h3>AI 推理轨迹</h3>
+          <div id="aiTrace" class="trace-list"></div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <div id="cursor" class="hand-cursor" aria-hidden="true"></div>
+
+  <div id="startOverlay" class="overlay">
+    <div class="overlay-card start-card">
+      <span class="eyebrow">KNOWLEDGE DEFENDER</span>
+      <h1>学科守卫者</h1>
+      <p id="startStatus">浏览器将请求摄像头权限，手势识别全部在本机完成。</p>
+      <button id="startButton" class="primary-button" type="button">开启挑战</button>
+    </div>
+  </div>
+
+  <div id="loadingOverlay" class="overlay hidden">
+    <div class="overlay-card loading-card">
+      <span class="eyebrow">QWEN REASONING</span>
+      <h2 id="loadingTitle">AI 正在工作</h2>
+      <p id="loadingText">正在理解当前学情。</p>
+      <div class="loading-track"><span></span></div>
+    </div>
+  </div>
+
+  <div id="resultOverlay" class="overlay hidden">
+    <div class="overlay-card result-card">
+      <div class="result-heading">
+        <h2 id="resultTitle">AI 判定</h2>
+        <strong id="resultScore">0%</strong>
+      </div>
+      <section>
+        <span class="eyebrow">AI 解释</span>
+        <p id="resultExplanation"></p>
+      </section>
+      <section>
+        <span class="eyebrow">AI 反馈</span>
+        <p id="resultFeedback"></p>
+      </section>
+    </div>
+  </div>
+
+  <div id="reportOverlay" class="overlay hidden">
+    <div class="overlay-card report-card">
+      <div class="report-heading">
+        <div>
+          <span class="eyebrow">AI LEARNING REPORT</span>
+          <h1 id="reportTitle">学习报告</h1>
+        </div>
+        <strong id="reportProgress"></strong>
+      </div>
+      <p id="reportSummary" class="report-summary"></p>
+      <div class="report-columns">
+        <section>
+          <h3>识别优势</h3>
+          <ul id="reportStrengths"></ul>
+        </section>
+        <section>
+          <h3>识别薄弱项</h3>
+          <ul id="reportWeaknesses"></ul>
+        </section>
+        <section>
+          <h3>建议复习章节</h3>
+          <ul id="reportChapters"></ul>
+        </section>
+      </div>
+      <section class="next-steps">
+        <h3>下一步学习建议</h3>
+        <ol id="reportNextSteps"></ol>
+      </section>
+    </div>
+  </div>
+
+  <div id="errorOverlay" class="overlay hidden">
+    <div class="overlay-card error-card">
+      <span class="eyebrow">AI REQUEST FAILED</span>
+      <h2>AI 调用失败</h2>
+      <p id="errorText"></p>
+      <div class="button-row">
+        <button id="retryButton" class="primary-button" type="button">重试</button>
+        <button id="reloadButton" class="secondary-button" type="button">重新开始</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

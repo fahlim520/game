@@ -6,5 +6,6 @@ __pycache__/
 .coverage
 htmlcov/
 reports/
+runtime/
 *.log
 recordings/
